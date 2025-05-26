@@ -332,8 +332,8 @@ class EndaliaProvider(TimeProvider):
         lunch_end = day_dt.replace(hour=12, minute=0, second=0, microsecond=0)
         
         logger(f"Scheduling work day for {day}:")
-        logger(f"  Work time: 07:00 - 16:00")
-        logger(f"  Lunch break: 11:00 - 12:00")
+        logger(f"  Work time: 09:00 - 18:00")
+        logger(f"  Lunch break: 13:00 - 14:00")
         
         result = self._create_working_day(
             employee_id, 
@@ -346,7 +346,7 @@ class EndaliaProvider(TimeProvider):
         )
         
         if result.get("error"):
-            error_msg = f"07:00 - 16:00: {result['error']}"
+            error_msg = f"09:00 - 18:00: {result['error']}"
             logger(f"  Error: {error_msg}")
             return {"work_day": error_msg}
         
@@ -399,7 +399,13 @@ class EndaliaProvider(TimeProvider):
         try:
             response = requests.post(url, json=payload, headers=headers)
             response.raise_for_status()
-            return response.json()
+            
+            # Check if response has content before trying to parse JSON
+            if response.text.strip():
+                return response.json()
+            else:
+                # Empty response body indicates success for Endalia API
+                return {"status": "success", "message": "Working day created successfully"}
         except requests.exceptions.RequestException as e:
             return {"error": str(e)}
 
